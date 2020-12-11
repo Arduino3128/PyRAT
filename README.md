@@ -1,7 +1,7 @@
-# Botnet
-Botnet based on Python
+# RAT(Remote Access Trojan)
+RAT based on Python
 
-Botnet based on python, Capable of executing DDoS Attacks, Launching Meterpreter payloads and ~~Spreading through USB Storage Devices.~~(This feature has been removed for safety purposes.)  
+PyRAT based on python, Capable of executing DDoS Attacks, Launching Meterpreter payloads and ~~Spreading through USB Storage Devices.~~(This feature has been removed for safety purposes.)  
 Since, this project is in early stage there is no guarantee of it stability.
 
 ## Known Issues:  
