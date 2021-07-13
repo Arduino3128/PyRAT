@@ -1,7 +1,7 @@
 # PyRAT(Remote Access Trojan)
 RAT(Remote Access Trojan) based on Python
 
-PyRAT based on python, Capable of Launching Meterpreter payloads and ~~Spreading through USB Storage Devices.~~(This feature has been removed for safety purposes.)  
+PyRAT based on python, Capable of launching Reverse Shell payloads.  
 Since, this project is in its early stage there is no guarantee of it stability.
 
 ## Known Issues:  
